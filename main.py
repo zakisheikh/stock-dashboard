@@ -1,15 +1,17 @@
+import matplotlib
+matplotlib.use("Agg")
 import tkinter as tk
 from tkinter import ttk, messagebox
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from fredapi import Fred
 import os
+import tempfile
+from PIL import Image, ImageTk
 
 API_KEY = "0edbe5011d8b90b46bc6474920b5bf8e"
 
-# FRED series IDs for California regions (median home prices)
 REGIONS = {
     "California (Statewide)": "MEDLISPRICA",
     "Los Angeles County": "MEDLISPRI6037",
@@ -61,20 +63,9 @@ def show_chart(region, years, parent):
 
     moving_avg = np.convolve(prices, np.ones(6) / 6, mode='valid')
     pct_change = ((prices[-1] - prices[0]) / prices[0]) * 100
-
-    popup = tk.Toplevel(parent)
-    popup.title(f"{region} - {years} Year Housing Prices")
-    popup.geometry("850x600")
-
-    stats_frame = tk.Frame(popup, pady=10)
-    stats_frame.pack()
-
     avg = np.mean(prices)
     high = np.max(prices)
     low = np.min(prices)
-
-    tk.Label(stats_frame, text=f"Average: ${avg:,.0f}   |   High: ${high:,.0f}   |   Low: ${low:,.0f}   |   Change: {pct_change:.1f}%",
-             font=("Arial", 11)).pack()
 
     fig, ax = plt.subplots(figsize=(9, 4.5))
     ax.plot(dates, prices, label="Median Home Price", color="#2563eb", linewidth=2)
@@ -87,9 +78,23 @@ def show_chart(region, years, parent):
     ax.grid(True, alpha=0.3)
     fig.tight_layout()
 
-    canvas = FigureCanvasTkAgg(fig, master=popup)
-    canvas.draw()
-    canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
+    tmp = tempfile.NamedTemporaryFile(suffix=".png", delete=False)
+    fig.savefig(tmp.name, dpi=100)
+    plt.close(fig)
+
+    popup = tk.Toplevel(parent)
+    popup.title(f"{region} - {years} Year Housing Prices")
+    popup.geometry("920x640")
+
+    tk.Label(popup,
+             text=f"Average: ${avg:,.0f}   |   High: ${high:,.0f}   |   Low: ${low:,.0f}   |   Change: {pct_change:.1f}%",
+             font=("Arial", 11), pady=8).pack()
+
+    img = Image.open(tmp.name)
+    photo = ImageTk.PhotoImage(img)
+    label = tk.Label(popup, image=photo)
+    label.image = photo
+    label.pack()
 
     tk.Button(popup, text="Close", command=popup.destroy, padx=10, pady=5).pack(pady=8)
 
