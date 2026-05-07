@@ -29,12 +29,21 @@ This project is a California Housing Market Dashboard built in Python that allow
 - The chart updates dynamically based on what the user selects
 
 ## Installation
+This project requires **Python 3.12** with a working Tcl/Tk. On macOS, the system Python (3.9) ships with a broken Tk and crashes on Tkinter window creation, so use Homebrew Python instead.
+
+On macOS:
 ```
-pip install fredapi pandas numpy matplotlib
+brew install python@3.12 python-tk@3.12
 ```
-Then run:
+
+Install dependencies:
 ```
-python main.py
+python3.12 -m pip install fredapi pandas numpy matplotlib Pillow
+```
+
+Run the app:
+```
+python3.12 main.py
 ```
 
 ## Future Improvements
